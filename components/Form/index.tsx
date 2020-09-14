@@ -15,75 +15,50 @@ const Form: FC<FormProps> = ({
   handleSubmit,
   label,
 }) => {
-  const [state, setState] = useState(initialValues);
+  const [inputState, setInputState] = useState(initialValues);
+  const [buttonDisabled, setButtonDisabled] = useState<boolean[]>(
+    initialValues.map((val) => {
+      return false;
+    })
+  );
 
   useEffect(() => {
-    setState(initialValues);
+    setInputState(initialValues);
   }, [initialValues]);
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    let newInputs = [...state];
-    newInputs[index] = {
-      ...newInputs[index],
-      value: event.target.value,
-    };
-    setState(newInputs);
+  const isSubmitBtnDisabled = (inputFilled: boolean, index: number) => {
+    let validInputs = [...buttonDisabled];
+    validInputs[index] = inputFilled;
+    setButtonDisabled(validInputs);
   };
-
-  const handleFocusIn = (index: number) => {
-    let newInputs = [...state];
-    if (typeof newInputs[index].focus !== "undefined") {
-      newInputs[index] = {
-        ...newInputs[index],
-        focus: false,
-      };
-      setState(newInputs);
-    }
-  };
-
-  const handleFocusOut = (index: number) => {
-    let newInputs = [...state];
-    if (typeof newInputs[index].focus !== "undefined") {
-      newInputs[index] = {
-        ...newInputs[index],
-        focus: true,
-      };
-      setState(newInputs);
-    }
-  };
-
-  const checkBtnDisabled = () => {
-    const check = state.map((input) => {
-      if (input.min && input.value.length < input.min) return false;
-      return true;
-    });
-    return check.includes(false);
-  };
-
-  console.log(state);
 
   return (
-    <MyStyledForm onSubmit={() => handleSubmit(event, state)}>
-      {state.map((input, index) => {
-        const allProps = {
+    <MyStyledForm onSubmit={() => handleSubmit(event, inputState)}>
+      {inputState.map((input, index) => {
+        const inputProps = {
           ...input,
           index,
           label,
-          handleChange,
-          handleFocusIn,
-          handleFocusOut,
+          inputState,
+          setInputState,
+          buttonDisabled,
+          isSubmitBtnDisabled,
         };
         return (
           <MyStyledForm.inputSection key={index}>
-            <Input {...allProps} />
+            <Input {...inputProps} />
           </MyStyledForm.inputSection>
         );
       })}
       {buttonText && (
-        <MyStyledForm.button disabled={checkBtnDisabled()} type="submit">
+        <MyStyledForm.button
+          disabled={
+            buttonDisabled.length === inputState.length
+              ? buttonDisabled.includes(false)
+              : false
+          }
+          type="submit"
+        >
           {buttonText}
         </MyStyledForm.button>
       )}

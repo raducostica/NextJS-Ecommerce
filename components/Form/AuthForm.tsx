@@ -8,6 +8,7 @@ const FormContainer = styled.div`
   margin: 24px auto 0;
   padding: 0 24px;
 
+  height: auto;
   @media only screen and (min-width: 840px) {
     margin: 40px auto 0;
     padding: 0;

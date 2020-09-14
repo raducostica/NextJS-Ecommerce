@@ -1,32 +1,16 @@
 import styled from "styled-components";
 import { FC, useState, useEffect } from "react";
 import Icon from "../Icon/Icon";
+import SelectInput from "./SelectInput";
+import TextInput from "./TextInput";
 
-const StyledInputContainer = styled.div`
+const StyledInputContainer = styled.div<{ error: boolean }>`
   border-radius: 4px;
   width: 100%;
   display: flex;
-  align-items: center;
+  flex-direction: ${({ error }) => (error ? "column" : "row")};
   justify-content: center;
-  height: 50px;
-`;
-
-const StyledInput = styled.input`
-  height: 100%;
-  flex: 1;
-  padding-left: 12px;
-  font-size: 14px;
-  ::-webkit-input-placeholder {
-    text-transform: capitalize;
-  }
-
-  :-ms-input-placeholder {
-    text-transform: capitalize;
-  }
-
-  ::placeholder {
-    text-transform: capitalize;
-  }
+  min-height: 50px;
 `;
 
 const StyledLabel = styled.label`
@@ -35,63 +19,37 @@ const StyledLabel = styled.label`
   margin-bottom: 4px;
 `;
 
-const StyledFormError = styled.div`
-  font-size: 12px;
-  color: red;
-  height: 12px;
-`;
-
 const StyledIcon = styled.div`
   background: #fff;
   padding: 0 8px;
   font-size: 25px;
-  height: 100%;
   display: flex;
   align-items: center;
   background: yellow;
+  border: 1px solid #333;
 `;
 
 const allInputs = (props: any) => {
   const MyInputs: { [key: string]: JSX.Element } = {
-    TextInput: (
-      <StyledInput
-        onChange={(e) => props.handleChange(e, props.index)}
-        onFocus={() => props.handleFocusIn(props.index)}
-        onBlur={() => props.handleFocusOut(props.index)}
-        {...props}
-      />
-    ),
-    SelectInput: <div>Hello</div>,
+    TextInput: <TextInput {...props} />,
+    SelectInput: <SelectInput {...props} />,
   };
 
   return MyInputs[props.renderType];
 };
 
-const Input: FC = (props: any) => {
-  console.log(props);
+const Input: FC = ({ label, iconName, ...props }: any) => {
   return (
     <>
-      {props.label && <StyledLabel>{props.name}</StyledLabel>}
-      <StyledInputContainer>
+      {(label as boolean) && <StyledLabel>{props.name}</StyledLabel>}
+      <StyledInputContainer error={props.error}>
         {allInputs(props)}
-        {props.iconName && (
+        {iconName && (
           <StyledIcon>
-            <Icon iconName={props.iconName} />
+            <Icon iconName={iconName} />
           </StyledIcon>
         )}
       </StyledInputContainer>
-      <StyledFormError>
-        {props.min &&
-          props.value.length < props.min &&
-          props &&
-          props.focus &&
-          props.error && (
-            <span>
-              {props.name.toUpperCase()} must be atleast {props.min} characters
-              long
-            </span>
-          )}
-      </StyledFormError>
     </>
   );
 };

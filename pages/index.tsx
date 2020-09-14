@@ -5,6 +5,7 @@ import useWindowDimensions from "../utils/useWindowDimension";
 import { useEffect, useState } from "react";
 import Form from "../components/Form";
 import SelectInput from "../toolkit/Inputs/SelectInput";
+import { getInputInfo } from "../utils/getInputInfo";
 
 const Slide = keyframes`
   0% { margin-top: -300px;}
@@ -91,7 +92,7 @@ const headline = [
   },
 ];
 
-export default function Home() {
+export default function Home({ inputs }: any) {
   const { width, height } = useWindowDimensions();
   const [initialWidth, setInitialWidth] = useState(width);
 
@@ -119,20 +120,27 @@ export default function Home() {
           }}
         >
           <Form
-            initialValues={[
-              {
-                value: "",
-                name: "Search for anything",
-                iconName: "SEARCH",
-                renderType: "TextInput",
-              },
-            ]}
+            initialValues={[{ ...inputs[0], iconName: "SEARCH" }]}
             label={false}
             handleSubmit={() => {}}
           />
         </SearchContainer>
       </Header>
-      <SelectInput />
     </DefaultLayout>
   );
 }
+
+export const getStaticProps = async () => {
+  let inputData = {
+    inputTypes: ["TextInput"],
+    values: [""],
+    type: ["text"],
+    inputNames: ["Search for anything"],
+  };
+  const returnData = await getInputInfo(inputData);
+  return {
+    props: {
+      inputs: returnData,
+    },
+  };
+};
