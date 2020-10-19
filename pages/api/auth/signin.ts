@@ -1,19 +1,25 @@
 import bcrypt from "bcrypt";
 import { NextApiRequest, NextApiResponse } from "next";
 import jwt from "jsonwebtoken";
-const User = require("../../../models/user");
+import User from "../../../models/user";
 import withConnect from "../../../middleware/database";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   const { method } = req;
+
   if (method === "POST") {
     try {
-      let newUser = await User.findOne({ email });
-      if (!newUser) return res.status(401).json({ msg: "invalid" });
+      let newUser = await User.findOne({ username });
+      if (!newUser)
+        return res
+          .status(401)
+          .json({ msg: "Invalid Username or Password. Please try again" });
       const isMatch = await bcrypt.compare(password, newUser.password);
       if (!isMatch) {
-        return res.status(400).json({ msg: "Invalid Credentials" });
+        return res
+          .status(401)
+          .json({ msg: "Invalid Username or Password. Please try again" });
       }
       const payload = {
         user: {
@@ -37,30 +43,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       console.log(error);
     }
   } else {
-    res.status(501).json({ msg: "server error" });
-  }
-  if (req.method === "GET") {
-    const signInInputs = [
-      {
-        name: "username",
-        value: "",
-        focus: false,
-        min: 3,
-        error: true,
-        renderType: "TextInput",
-      },
-      {
-        name: "password",
-        type: "password",
-        value: "",
-        focus: false,
-        min: 6,
-        error: true,
-        renderType: "TextInput",
-      },
-    ];
-
-    res.status(201).json(signInInputs);
+    return res.status(501).json({ msg: "server error" });
   }
 };
 

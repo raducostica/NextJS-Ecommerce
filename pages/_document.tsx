@@ -33,4 +33,21 @@ export default class MyDocument extends Document {
       sheet.seal();
     }
   }
+
+  render() {
+    return (
+      <html lang="en">
+        <body>
+          <html>
+            <Head />
+            <body>
+              <Main />
+              <div id="modal" />
+              <NextScript />
+            </body>
+          </html>
+        </body>
+      </html>
+    );
+  }
 }

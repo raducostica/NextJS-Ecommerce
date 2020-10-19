@@ -1,11 +1,13 @@
 import DefaultLayout from "../layouts/DefaultLayout";
 import styled, { keyframes } from "styled-components";
-import Input from "../toolkit/Inputs/Input";
 import useWindowDimensions from "../utils/useWindowDimension";
 import { useEffect, useState } from "react";
 import Form from "../components/Form";
-import SelectInput from "../toolkit/Inputs/SelectInput";
 import { getInputInfo } from "../utils/getInputInfo";
+import Carousel from "../components/Carousel/Carousel";
+import SearchInput from "../components/Homepage/Homepage-components/SearchInput";
+import Modal from "../components/Modal/Modal";
+import DraggableModal from "../components/Modal/DraggableModal";
 
 const Slide = keyframes`
   0% { margin-top: -300px;}
@@ -72,6 +74,38 @@ const SearchContainer = styled.div`
   align-items: flex-end;
 `;
 
+// CAROUSEL
+const CarouselContainer = styled.div`
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  bottom: -220px;
+  left: 0;
+
+  @media only screen and (min-width: 800px) {
+    bottom: -150px;
+  }
+`;
+
+const StyledGB = styled.div`
+  background: #fff;
+  border-radius: 200px 200px 0 0;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  max-width: 1040px;
+  height: 50px;
+  margin: 0 auto;
+`;
+
+const StyledBody = styled.div`
+  position: relative;
+  min-height: 100vh;
+`;
+
 const headline = [
   {
     textBefore: "Find your next",
@@ -93,7 +127,7 @@ const headline = [
 ];
 
 export default function Home({ inputs }: any) {
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const [initialWidth, setInitialWidth] = useState(width);
 
   useEffect(() => {
@@ -101,32 +135,30 @@ export default function Home({ inputs }: any) {
   }, [width]);
 
   return (
-    <DefaultLayout>
-      <Header>
-        <Slider>
-          {headline.map((el, index) => {
-            return (
-              <Text key={index}>
-                {el.textBefore} <StyledSpan>{el.keyWord}</StyledSpan>{" "}
-                {el.textAfter}
-              </Text>
-            );
-          })}
-        </Slider>
-        <SearchContainer
-          style={{
-            width: initialWidth,
-            maxWidth: "870px",
-          }}
-        >
-          <Form
+    <StyledBody>
+      <DefaultLayout>
+        <Header>
+          <Slider>
+            {headline.map((el, index) => {
+              return (
+                <Text key={index}>
+                  {el.textBefore} <StyledSpan>{el.keyWord}</StyledSpan>{" "}
+                  {el.textAfter}
+                </Text>
+              );
+            })}
+          </Slider>
+          <SearchInput
             initialValues={[{ ...inputs[0], iconName: "SEARCH" }]}
-            label={false}
-            handleSubmit={() => {}}
+            initialWidth={initialWidth}
           />
-        </SearchContainer>
-      </Header>
-    </DefaultLayout>
+        </Header>
+        <StyledGB />
+      </DefaultLayout>
+      <CarouselContainer>
+        <Carousel heading="Most Viewed" />
+      </CarouselContainer>
+    </StyledBody>
   );
 }
 
@@ -137,10 +169,10 @@ export const getStaticProps = async () => {
     type: ["text"],
     inputNames: ["Search for anything"],
   };
-  const returnData = await getInputInfo(inputData);
+  const inputInfo = getInputInfo(inputData);
   return {
     props: {
-      inputs: returnData,
+      inputs: inputInfo,
     },
   };
 };

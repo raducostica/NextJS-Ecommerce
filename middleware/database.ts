@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { NextApiRequest, NextApiResponse } from "next";
 const uri = `mongodb+srv://admin:admin@cluster0.4qkta.mongodb.net/personal?retryWrites=true&w=majority`;
 
-const withConnect = (handler) => async (
+const withConnect = (handler: any) => async (
   req: NextApiRequest,
   res: NextApiResponse
 ) => {

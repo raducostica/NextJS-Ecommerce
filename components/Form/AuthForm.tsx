@@ -1,7 +1,10 @@
-import React, { FC } from "react";
+import React, { FC, useContext, useState } from "react";
 import Form from "../../components/Form";
 import styled from "styled-components";
 import Link from "next/link";
+import { UserContext } from "../../context/UserContext";
+import Modal from "../Modal/Modal";
+import { useRouter } from "next/router";
 
 const FormContainer = styled.div`
   max-width: 432px;
@@ -34,6 +37,20 @@ const StyledSpan = styled.span`
   color: blue;
 `;
 
+const ErrorMessagePopup = styled.div`
+  background: #fcf0f2;
+  color: #d50000;
+  border-radius: 3px;
+  margin: 0 0 16px;
+  padding: 12px;
+`;
+
+const ErrorMessage = styled.span`
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+`;
+
 type AuthFormProps = {
   inputs: {
     name: string;
@@ -43,23 +60,22 @@ type AuthFormProps = {
     min?: number;
     max?: number;
   }[];
-  buttonText: string;
   apiCall: (userInfo: {
     username: string;
     password: string;
     email: string;
-  }) => void;
-  type: string; //i.e in or up (Sign in or sign up)
+  }) => { [key: string]: string } | void;
   hrefLink: string;
 };
 
-const AuthForm: FC<AuthFormProps> = ({
-  inputs,
-  buttonText,
-  apiCall,
-  type,
-  hrefLink,
-}) => {
+const redirectUrl = () => {};
+
+const AuthForm: FC<AuthFormProps> = ({ inputs, apiCall, hrefLink }) => {
+  const [modalState, setModalState] = useState(false);
+  const [error, setError] = useState<null | string>(null);
+  const authUrl = hrefLink.split("/")[hrefLink.split("/").length - 1];
+  const router = useRouter();
+
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
     formData: any
@@ -71,33 +87,77 @@ const AuthForm: FC<AuthFormProps> = ({
       acc[currName] = currvalue;
       return acc;
     }, {});
-    console.log(data);
-    // apiCall(data);
+    const response = await apiCall(data);
+    if (response) {
+      setError(response.msg);
+      return;
+    }
+
+    if (authUrl === "signin") {
+      handleOnOpenModal();
+      return;
+    }
   };
+
+  const handleOnOpenModal = () => {
+    setModalState(true);
+  };
+
+  const handleOnCloseModal = () => {
+    setModalState(false);
+  };
+
+  console.log(authUrl);
+
   return (
-    <FormContainer>
-      <div>
-        <Link href="/" as="/">
-          <a>Logo</a>
-        </Link>
-      </div>
-      <Styledh3>Sign in to continue</Styledh3>
-      <Form
-        initialValues={inputs}
-        buttonText={buttonText}
-        handleSubmit={handleSubmit}
-        label={true}
-      />
-      <StyledPara>
-        {type === "in" && <>Don't have an account?</>}
-        {type === "up" && <>Already have an account?</>}
-        <StyledSpan>
-          <Link href={hrefLink} as={hrefLink}>
-            {type === "in" ? <a>Sign up now</a> : <a>Sign in now</a>}
+    <>
+      <FormContainer>
+        <div>
+          <Link href="/" as="/">
+            <a>Logo</a>
           </Link>
-        </StyledSpan>
-      </StyledPara>
-    </FormContainer>
+        </div>
+        <Styledh3>
+          Sign {authUrl === "signup" ? "in" : "up"} to continue
+        </Styledh3>
+        {error && (
+          <ErrorMessagePopup>
+            <ErrorMessage>{error}</ErrorMessage>
+          </ErrorMessagePopup>
+        )}
+        <Form
+          initialValues={inputs}
+          buttonText={authUrl === "signup" ? "SIGN IN" : "SIGN UP"}
+          handleSubmit={handleSubmit}
+          label={true}
+        />
+        <StyledPara>
+          {authUrl === "signup" && <>Don't have an account?</>}
+          {authUrl === "signin" && <>Already have an account?</>}
+          <StyledSpan>
+            <Link href={hrefLink} as={hrefLink}>
+              {authUrl === "signup" ? <a>Sign up now</a> : <a>Sign in now</a>}
+            </Link>
+          </StyledSpan>
+        </StyledPara>
+      </FormContainer>
+      <Modal
+        selector={"#modal"}
+        modalState={modalState}
+        handleOnCloseModal={handleOnCloseModal}
+      >
+        <div>Account has been created successfully</div>
+        <div>
+          Please{" "}
+          <span>
+            <Link href="/auth/signin" as="/auth/signin">
+              <a>Sign In</a>
+            </Link>
+          </span>{" "}
+          to Continue
+        </div>
+      </Modal>
+    </>
   );
 };
 

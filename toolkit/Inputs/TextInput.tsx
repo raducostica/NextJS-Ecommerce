@@ -1,5 +1,6 @@
-import { FC, useEffect } from "react";
+import { FC, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
+import debounce from "lodash.debounce";
 
 const StyledFormError = styled.div`
   font-size: 12px;
@@ -25,7 +26,20 @@ const StyledInput = styled.input`
 `;
 
 const TextInput: FC = (props: any) => {
-  const { state, setState, isSubmitBtnDisabled, index } = props;
+  const {
+    inputState,
+    setInputState,
+    isSubmitBtnDisabled,
+    inputIndex,
+    useDebounce,
+    setSearchQuery,
+  } = props;
+
+  const isFirstRun = useRef<boolean>(true);
+
+  const getMatchingSearch = useCallback(debounce(setSearchQuery, 700), [
+    inputState[inputIndex].value,
+  ]);
 
   useEffect(() => {
     let check = props.minOrNoofChoices
@@ -33,9 +47,20 @@ const TextInput: FC = (props: any) => {
       : props.value.length > 1;
 
     if (check) {
-      isSubmitBtnDisabled(true, index);
+      isSubmitBtnDisabled(true, inputIndex);
     } else {
-      isSubmitBtnDisabled(false, index);
+      isSubmitBtnDisabled(false, inputIndex);
+    }
+  }, [props.value]);
+
+  useEffect(() => {
+    // skip first run
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    if (useDebounce) {
+      getMatchingSearch(inputIndex);
     }
   }, [props.value]);
 
@@ -43,66 +68,63 @@ const TextInput: FC = (props: any) => {
     event: React.ChangeEvent<HTMLInputElement>,
     index: number
   ) => {
-    let newInputs = [...state];
+    let newInputs = [...inputState];
     newInputs[index] = {
       ...newInputs[index],
       value: event.target.value,
     };
-    setState(newInputs);
+    setInputState(newInputs);
   };
 
   const handleFocusIn = (index: number) => {
-    let newInputs = [...state];
+    let newInputs = [...inputState];
     if (typeof newInputs[index].focus !== "undefined") {
       newInputs[index] = {
         ...newInputs[index],
         focus: false,
       };
-      setState(newInputs);
+      setInputState(newInputs);
     }
   };
 
   const handleFocusOut = (index: number) => {
-    let newInputs = [...state];
+    let newInputs = [...inputState];
     if (typeof newInputs[index].focus !== "undefined") {
       newInputs[index] = {
         ...newInputs[index],
         focus: true,
       };
-      setState(newInputs);
+      setInputState(newInputs);
     }
   };
 
   return (
     <>
       <StyledInput
-        onChange={(e) => handleChange(e, index)}
-        onFocus={() => handleFocusIn(index)}
-        onBlur={() => handleFocusOut(index)}
+        onChange={(e) => handleChange(e, inputIndex)}
+        onFocus={() => handleFocusIn(inputIndex)}
+        onBlur={() => handleFocusOut(inputIndex)}
         {...props}
       />
       <StyledFormError>
-        {props.min === 0 && props.focus && props.error && (
-          <span>
-            {props.name.toUpperCase()} must be atleast {props.min} characters
-            long
-          </span>
-        )}
-        {props.minOrNoofChoices
-          ? props.value.length < props.minOrNoofChoices &&
-            props &&
-            props.focus &&
-            props.error && (
-              <span>
-                {props.name.toUpperCase()} must be atleast{" "}
-                {props.minOrNoofChoices} characters long
-              </span>
-            )
-          : props.focus &&
-            props.error &&
-            props.value.length <= 1 && (
-              <span>{props.name.toUpperCase()} must be filled out</span>
+        {props.focus && props.error && (
+          <>
+            {props.minOrNoofChoices ? (
+              <>
+                {props.value.length < props.minOrNoofChoices &&
+                  props.value.length > 0 && (
+                    <span>
+                      {props.name.toUpperCase()} must be atleast{" "}
+                      {props.minOrNoofChoices} characters long
+                    </span>
+                  )}
+                {props.value.length < 1 && <span>Required</span>}
+              </>
+            ) : (
+              props.value.length < 1 && <span>Required</span>
             )}
+          </>
+        )}
       </StyledFormError>
     </>
   );

@@ -1,40 +1,40 @@
 import bcrypt from "bcrypt";
 import { NextApiRequest, NextApiResponse } from "next";
-const User = require("../../../models/user");
+import User from "../../../models/user";
 import withConnect from "../../../middleware/database";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method === "POST") {
-    const { email, username, password } = req.body;
-    const { method } = req;
+  const { email, username, password } = req.body;
+  const { method } = req;
 
-    if (method === "POST") {
-      try {
-        let newUser = await User.findOne({ email });
+  console.log(method);
 
-        if (newUser) return res.status(401).json({ msg: "invalid" });
+  if (method === "POST") {
+    try {
+      let newUser = await User.findOne({ email });
 
-        newUser = new User({
-          username,
-          email,
-          password,
-        });
+      if (newUser)
+        return res.status(401).json({ msg: "Username already in use" });
 
-        const salt = await bcrypt.genSalt(10);
+      newUser = new User({
+        username,
+        email,
+        password,
+      });
 
-        newUser.password = await bcrypt.hash(password, salt);
+      const salt = await bcrypt.genSalt(10);
 
-        await newUser.save();
+      newUser.password = await bcrypt.hash(password, salt);
 
-        res.status(201).json({ msg: "success" });
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      res.status(501).json({ msg: "server error" });
+      await newUser.save();
+
+      res.status(201).json({ msg: "success" });
+    } catch (error) {
+      console.log(error);
+      return res.status(401).json({ msg: "Invalid, please Try again" });
     }
   } else {
-    return res.status(501).json({ msg: "server error" });
+    res.status(501).json({ msg: "server error" });
   }
 };
 

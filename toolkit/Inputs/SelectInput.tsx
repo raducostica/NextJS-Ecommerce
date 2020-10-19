@@ -1,6 +1,7 @@
 import { useState, Fragment, useEffect } from "react";
 import styled from "styled-components";
 import SelectedItem from "../SelectedItem/SelectedItem";
+import SingleChoiceSelect from "./SingleChoiceSelect";
 
 const StyledRadioOptionContainer = styled.div`
   background: blue;
@@ -47,9 +48,9 @@ const SelectInputHolder = styled.div`
   display: flex;
   align-items: center;
   padding: 0 8px;
-  min-height: 44px;
   flex-wrap: wrap;
   width: 100%;
+  cursor: pointer;
 `;
 
 const SelectInputContainer = styled.div`
@@ -60,19 +61,27 @@ const SelectInputContainer = styled.div`
 `;
 
 const SelectInput = (props: any) => {
-  const { isSubmitBtnDisabled, index, value, minOrNoofChoices } = props;
+  const { isSubmitBtnDisabled, inputIndex, value, minOrNoofChoices } = props;
   const [openSelectMenu, setOpenSelectMenu] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{ [key: number]: string }>(
     {}
   );
+  const noOfOptionsToChoose: number = value.length > 2 ? minOrNoofChoices : 1;
 
   useEffect(() => {
     let currentlySelectedCount = Object.keys(selectedItems).length;
     if (
-      currentlySelectedCount < minOrNoofChoices &&
+      currentlySelectedCount < noOfOptionsToChoose &&
       currentlySelectedCount > 0
     ) {
       setOpenSelectMenu(true);
+    }
+
+    if (Object.keys(selectedItems).length === noOfOptionsToChoose) {
+      isSubmitBtnDisabled(true, inputIndex);
+      setOpenSelectMenu(false);
+    } else {
+      isSubmitBtnDisabled(false, inputIndex);
     }
   }, [selectedItems]);
 
@@ -89,12 +98,27 @@ const SelectInput = (props: any) => {
         value[value.findIndex((input: any) => input.id === inputId)].text;
     }
     setSelectedItems(prevSelected);
-    if (Object.keys(prevSelected).length === minOrNoofChoices) {
-      isSubmitBtnDisabled(true, index);
-      setOpenSelectMenu(false);
-    } else {
-      isSubmitBtnDisabled(false, index);
+  };
+
+  const handleSingleSelectChange = (
+    event: React.SyntheticEvent<EventTarget>,
+    inputId: number
+  ) => {
+    event.stopPropagation();
+    let prevSelected = { ...selectedItems };
+
+    if (!prevSelected[inputId]) {
+      prevSelected[inputId] =
+        value[value.findIndex((input: any) => input.id === inputId)].text;
     }
+
+    for (let itemSelectedProperty in prevSelected) {
+      if (parseInt(itemSelectedProperty) !== inputId) {
+        delete prevSelected[itemSelectedProperty];
+      }
+    }
+
+    setSelectedItems(prevSelected);
   };
 
   const handleClick = () => {
@@ -103,55 +127,68 @@ const SelectInput = (props: any) => {
 
   return (
     <SelectInputContainer>
-      <SelectInputHolder onClick={handleClick}>
-        {Object.keys(selectedItems).length === 0 ? (
-          <SelectedItem
-            border={false}
-            iconName={!openSelectMenu ? "ARROWDOWN" : "ARROWUP"}
-          >
-            {`Please select ${minOrNoofChoices} from the following`}
-          </SelectedItem>
-        ) : (
-          Object.keys(selectedItems).map((key: string, index: number) => {
-            let inputId =
-              value[value.findIndex((input: any) => input.id === parseInt(key))]
-                .id;
-            return (
+      {noOfOptionsToChoose === 1 ? (
+        <SingleChoiceSelect
+          value={value}
+          handleClick={handleSingleSelectChange}
+          selectedItems={selectedItems}
+        />
+      ) : (
+        <>
+          <SelectInputHolder onClick={handleClick}>
+            {Object.keys(selectedItems).length === 0 ? (
               <SelectedItem
-                border={true}
-                handleClick={handleChange}
-                key={index}
-                inputId={inputId}
-                iconName={"CLOSE"}
+                border={false}
+                iconName={!openSelectMenu ? "ARROWDOWN" : "ARROWUP"}
               >
-                {selectedItems[parseInt(key)]}
+                {`Please select ${noOfOptionsToChoose} from the following`}
               </SelectedItem>
-            );
-          })
-        )}
-      </SelectInputHolder>
-      <StyledRadioOptionContainer className={openSelectMenu ? "active" : ""}>
-        {value.map((inp: any, index: number) => {
-          return (
-            <Fragment key={index}>
-              <input
-                type="radio"
-                id={inp.text}
-                name={inp.text}
-                value={inp.text}
-                disabled={
-                  !selectedItems[inp.id] &&
-                  Object.keys(selectedItems).length === minOrNoofChoices
-                }
-                onChange={() => null}
-                onClick={(event) => handleChange(event, inp.id)}
-                checked={selectedItems[inp.id] ? true : false}
-              />
-              <label htmlFor={inp.text}>{inp.text}</label>
-            </Fragment>
-          );
-        })}
-      </StyledRadioOptionContainer>
+            ) : (
+              Object.keys(selectedItems).map((key: string, index: number) => {
+                let inputId =
+                  value[
+                    value.findIndex((input: any) => input.id === parseInt(key))
+                  ].id;
+                return (
+                  <SelectedItem
+                    border={true}
+                    handleClick={handleChange}
+                    key={index}
+                    inputId={inputId}
+                    iconName={"CLOSE"}
+                  >
+                    {selectedItems[parseInt(key)]}
+                  </SelectedItem>
+                );
+              })
+            )}
+          </SelectInputHolder>
+          <StyledRadioOptionContainer
+            className={openSelectMenu ? "active" : ""}
+          >
+            {value.map((inp: any, index: number) => {
+              return (
+                <Fragment key={index}>
+                  <input
+                    type="radio"
+                    id={inp.text}
+                    name={inp.text}
+                    value={inp.text}
+                    disabled={
+                      !selectedItems[inp.id] &&
+                      Object.keys(selectedItems).length === noOfOptionsToChoose
+                    }
+                    onChange={() => null}
+                    onClick={(event) => handleChange(event, inp.id)}
+                    checked={selectedItems[inp.id] ? true : false}
+                  />
+                  <label htmlFor={inp.text}>{inp.text}</label>
+                </Fragment>
+              );
+            })}
+          </StyledRadioOptionContainer>
+        </>
+      )}
     </SelectInputContainer>
   );
 };

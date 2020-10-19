@@ -12,11 +12,16 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
-html {
+/* html {
   background: #d3d3d3;
-}
+} */
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+textarea:focus,
+input:focus {
+  outline: none;
 }

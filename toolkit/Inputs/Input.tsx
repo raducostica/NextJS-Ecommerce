@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { FC, useState, useEffect } from "react";
+import { FC } from "react";
 import Icon from "../Icon/Icon";
 import SelectInput from "./SelectInput";
 import TextInput from "./TextInput";
@@ -45,7 +45,13 @@ const Input: FC = ({ label, iconName, ...props }: any) => {
       <StyledInputContainer error={props.error}>
         {allInputs(props)}
         {iconName && (
-          <StyledIcon>
+          <StyledIcon
+            onClick={
+              props.search
+                ? (e) => props.handleSubmit(e, props.inputState)
+                : undefined
+            }
+          >
             <Icon iconName={iconName} />
           </StyledIcon>
         )}

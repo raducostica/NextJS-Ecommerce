@@ -15,6 +15,7 @@ const StyledSelectedItem = styled.div<{ border: boolean }>`
 const StyledSelectedItemText = styled.div`
   flex: 1;
   padding: 0 4px;
+  font-size: 14px;
 `;
 
 const StyledSelectedItemIcon = styled.div`
